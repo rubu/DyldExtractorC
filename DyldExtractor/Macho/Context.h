@@ -130,8 +130,8 @@ public:
   template <class lc, std::size_t _s>
   inline std::vector<typename c_const<ro, lc>::T *>
   getAllLCs(const uint32_t (&cmds)[_s]) const {
-    return reinterpret_cast<std::vector<typename c_const<ro, lc>::T *> &>(
-        _getAllLCs(cmds, _s));
+    auto allLCs = _getAllLCs(cmds, _s);
+    return reinterpret_cast<const std::vector<typename c_const<ro, lc>::T *> &>(allLCs);
   }
 
   /// @brief Get all load commands

@@ -453,7 +453,7 @@ template <class A> void Arm64Fixer<A>::fixCallsites() {
 
     const auto brInstr = (uint32_t *)iLoc;
     const SPtrT brOff =
-        arm64Utils.signExtend<SPtrT, 28>((*brInstr & 0x3FFFFFF) << 2);
+        arm64Utils.template signExtend<SPtrT, 28>((*brInstr & 0x3FFFFFF) << 2);
     const auto brTarget = iAddr + brOff;
 
     // Check if it needs fixing
@@ -565,5 +565,5 @@ template <class A> void Arm64Fixer<A>::fixCallsites() {
   }
 }
 
-template class Arm64Fixer<Utils::Arch::arm64>;
-template class Arm64Fixer<Utils::Arch::arm64_32>;
+template class Stubs::Arm64Fixer<Utils::Arch::arm64>;
+template class Stubs::Arm64Fixer<Utils::Arch::arm64_32>;

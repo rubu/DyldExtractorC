@@ -28,26 +28,27 @@ private:
 
   bool isInCodeRegions(PtrT addr);
 
-  Utils::ExtractionContext<A> &eCtx;
   const Dyld::Context &dCtx;
   Macho::Context<false, P> &mCtx;
   Provider::Accelerator<P> &accelerator;
-  Provider::ActivityLogger &activity;
-  std::shared_ptr<spdlog::logger> logger;
-  Provider::BindInfo<P> &bindInfo;
-  Provider::Disassembler<A> &disasm;
-  Provider::PointerTracker<P> &ptrTracker;
-  Provider::Symbolizer<A> &symbolizer;
   Provider::LinkeditTracker<P> &leTracker;
   Provider::SymbolTableTracker<P> &stTracker;
-
-  SymbolPointerCache<A> ptrCache;
 
   std::optional<Arm64Utils<A>> arm64Utils;
   std::optional<Arm64Fixer<A>> arm64Fixer;
 
-  std::optional<ArmUtils> armUtils;
   std::optional<ArmFixer> armFixer;
+
+public:
+    Provider::ActivityLogger &activity;
+    std::shared_ptr<spdlog::logger> logger;
+    Provider::BindInfo<P> &bindInfo;
+    Provider::Disassembler<A> &disasm;
+    Provider::PointerTracker<P> &ptrTracker;
+    Provider::Symbolizer<A> &symbolizer;
+    Utils::ExtractionContext<A> &eCtx;
+    SymbolPointerCache<A> ptrCache;
+    std::optional<ArmUtils> armUtils;
 };
 
 } // namespace DyldExtractor::Converter::Stubs

@@ -4,6 +4,8 @@
 #include "ArmUtils.h"
 #include "SymbolPointerCache.h"
 
+#include <list>
+
 namespace DyldExtractor::Converter::Stubs {
 
 template <class A> class Fixer;

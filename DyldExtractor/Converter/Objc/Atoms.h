@@ -170,7 +170,7 @@ class BindPointerAtom final : public ReferenceAtom<P, AtomT, typename P::PtrT> {
   using PtrT = P::PtrT;
 
 public:
-  ReferenceAtom<P, AtomT, PtrT>::ReferenceAtom;
+  typename ReferenceAtom<P, AtomT, PtrT>::ReferenceAtom;
   BindPointerAtom() : ReferenceAtom<P, AtomT, PtrT>(0) {}
 
   virtual void propagate() override {
@@ -209,6 +209,9 @@ template <class P> class StringAtom final : public Atom<P, const char *> {
 public:
   using Atom<P, const char *>::Atom;
   virtual PtrT encodedSize() const override {
+    if (this->data == nullptr) {
+      return 0;
+    }
     return (PtrT)strlen(this->data) + 1; // include null terminator
   }
 };

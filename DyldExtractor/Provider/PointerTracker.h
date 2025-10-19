@@ -57,6 +57,9 @@ public:
   /// @param address The address of the struct.
   /// @returns The slid struct.
   template <class T> T slideS(const PtrT address) const {
+    if (address == 0) {
+      return {};
+    }
     T data = *reinterpret_cast<const T *>(dCtx->convertAddrP(address));
     for (auto offset : T::PTRS()) {
       *(PtrT *)((uint8_t *)&data + (PtrT)offset) =

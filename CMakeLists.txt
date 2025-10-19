@@ -28,6 +28,8 @@ if(WIN32)
 	else() # Windows XP (5.1)
 		add_definitions(-D _WIN32_WINNT=0x0501)
 	endif()
+elseif(APPLE)
+	add_compile_options(-std=c++20)
 endif()
 
 # Boost

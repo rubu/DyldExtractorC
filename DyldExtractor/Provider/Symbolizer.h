@@ -2,7 +2,7 @@
 #define __PROVIDER_SYMBOLIZER__
 
 #include "ActivityLogger.h"
-#include "SymboltableTracker.h"
+#include "SymbolTableTracker.h"
 #include <Dyld/Context.h>
 #include <Macho/Context.h>
 #include <Provider/Accelerator.h>

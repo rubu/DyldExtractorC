@@ -297,7 +297,7 @@ void V3Processor::processPage(uint64_t pageAddr, uint8_t *pageData,
       newValue = (top8Bits << 13) | bottom43Bits;
     }
 
-    ptrTracker.add(pAddr, newValue);
+    ptrTracker.add(pLoc->raw, newValue);
     pLoc->raw = newValue;
   } while (delta != 0);
 }
@@ -425,6 +425,95 @@ void V4Processor::processPage(uint32_t pageAddr, uint8_t *pageData,
 }
 #pragma endregion V4Processor
 
+#pragma region V5Processor
+template <class P> class V5Processor {
+  using PtrT = P::PtrT;
+
+public:
+  V5Processor(
+      Macho::Context<false, P> &mCtx, Provider::ActivityLogger &activity,
+      std::shared_ptr<spdlog::logger> logger,
+      Provider::PointerTracker<P> &ptrTracker,
+      const Provider::PointerTracker<P>::MappingSlideInfo &mapSlideInfo);
+  void run();
+
+private:
+  void processPage(uint32_t pageAddr, uint8_t *pageData, uint32_t delta);
+
+  Macho::Context<false, P> &mCtx;
+  Provider::ActivityLogger &activity;
+  std::shared_ptr<spdlog::logger> logger;
+  Provider::PointerTracker<P> &ptrTracker;
+
+  const Provider::PointerTracker<P>::MappingSlideInfo &mapInfo;
+  dyld_cache_slide_info5 *slideInfo;
+
+  uint64_t deltaMask;
+  uint64_t deltaShift;
+  uint64_t pageSize;
+  uint64_t pageStartsCount;
+  uint64_t valueAdd;
+};
+
+template <class P> V5Processor<P>::V5Processor(
+    Macho::Context<false, P> &mCtx, Provider::ActivityLogger &activity,
+    std::shared_ptr<spdlog::logger> logger,
+    Provider::PointerTracker<P> &ptrTracker,
+    const Provider::PointerTracker<P>::MappingSlideInfo &mapSlideInfo)
+    : mCtx(mCtx), activity(activity), logger(logger), ptrTracker(ptrTracker),
+      mapInfo(mapSlideInfo),
+      slideInfo((dyld_cache_slide_info5 *)mapSlideInfo.slideInfo) {
+  assert(mapSlideInfo.slideInfoVersion == 5);
+}
+
+template <class P> void V5Processor<P>::run() {
+    auto pageStarts = (uint16_t *)((uint8_t *)slideInfo + offsetof(dyld_cache_slide_info5, page_starts));
+    auto dataStart = mCtx.convertAddrP(mapInfo.address);
+
+    for (auto &seg : mCtx.segments) {
+        if (!mapInfo.containsAddr(seg.command->vmaddr)) {
+            continue;
+        }
+        
+        // Get relevant pages
+        auto startI =
+            (seg.command->vmaddr - mapInfo.address) / slideInfo->page_size;
+        auto endI = Utils::align(seg.command->vmaddr + seg.command->vmsize -
+                                     mapInfo.address,
+                                 slideInfo->page_size) /
+                    slideInfo->page_size;
+
+        for (auto i = startI; i < endI; i++) {
+            if (pageStarts[i] == DYLD_CACHE_SLIDE_V5_PAGE_ATTR_NO_REBASE) {
+                continue;
+            }
+            auto pageAddr = (uint32_t)(mapInfo.address + (i * slideInfo->page_size));
+            auto pageData = dataStart + (i * slideInfo->page_size);
+            processPage(pageAddr, pageData, pageStarts[i]);
+        }
+    }
+}
+
+template <class P> void V5Processor<P>::processPage(uint32_t pageAddr, uint8_t *pageData, uint32_t delta) {
+    auto pLoc = (dyld_cache_slide_pointer5*)pageData;
+    do {
+        pLoc += delta;
+        delta = pLoc->regular.next;
+        uint64_t newValue = pLoc->regular.runtimeOffset + slideInfo->value_add;
+        if (pLoc->auth.auth) {
+            ptrTracker.addAuth(newValue, {(uint16_t)pLoc->auth.addrDiv,
+                                       (bool)pLoc->auth.diversity,
+                                       (uint8_t)pLoc->auth.keyIsData});
+
+        } else {
+            newValue = newValue | (static_cast<uint64_t>(pLoc->regular.high8) << 56);
+        }
+        ptrTracker.add(pLoc->raw, newValue);
+        pLoc->raw = newValue;
+    } while (delta != 0);
+}
+#pragma endregion V5Processor
+
 template <class A>
 void Converter::processSlideInfo(Utils::ExtractionContext<A> &eCtx) {
   using P = A::P;
@@ -469,6 +558,10 @@ void Converter::processSlideInfo(Utils::ExtractionContext<A> &eCtx) {
       } else {
         V4Processor(mCtx, activity, logger, ptrTracker, *map).run();
       }
+      break;
+    }
+    case 5: {
+      V5Processor<P>(mCtx, activity, logger, ptrTracker, *map).run();
       break;
     }
     default:

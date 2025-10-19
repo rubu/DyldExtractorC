@@ -25,5 +25,5 @@ template <class P> const std::string &ExtraData<P>::getExtendsSeg() const {
   return extendsSeg;
 }
 
-template class ExtraData<Utils::Arch::Pointer32>;
-template class ExtraData<Utils::Arch::Pointer64>;
+template class Provider::ExtraData<Utils::Arch::Pointer32>;
+template class Provider::ExtraData<Utils::Arch::Pointer64>;

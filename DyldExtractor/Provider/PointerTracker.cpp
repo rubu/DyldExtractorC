@@ -63,6 +63,10 @@ PointerTracker<P>::PtrT PointerTracker<P>::slideP(const PtrT addr) const {
       auto newValue = *(uint32_t *)ptr & ~(slideInfo->delta_mask);
       return (PtrT)newValue + (PtrT)slideInfo->value_add;
     }
+    case 5: {
+        auto slideInfo = (dyld_cache_slide_info5*)map.slideInfo;
+        return (PtrT)addr + (PtrT)slideInfo->value_add;
+    }
     default: {
       if (logger) {
         SPDLOG_LOGGER_ERROR(*logger, "Unknown slide info version {}.",
@@ -171,7 +175,8 @@ template <class P> uint32_t PointerTracker<P>::getPageSize() const {
     return 0x1000;
   case 2:
   case 3:
-  case 4: {
+  case 4:
+  case 5:{
     // page size in second uint32_t field
     auto pageSize = reinterpret_cast<const uint32_t *>(map->slideInfo)[1];
     return pageSize;
@@ -262,5 +267,5 @@ template <class P> void PointerTracker<P>::fillMappings() {
   }
 }
 
-template class PointerTracker<Utils::Arch::Pointer32>;
-template class PointerTracker<Utils::Arch::Pointer64>;
+template class Provider::PointerTracker<Utils::Arch::Pointer32>;
+template class Provider::PointerTracker<Utils::Arch::Pointer64>;

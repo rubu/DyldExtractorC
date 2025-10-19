@@ -19,10 +19,10 @@ SegmentContext<ro, P>::SegmentContext(SegmentCommandT *segment)
   }
 }
 
-template class SegmentContext<true, Utils::Arch::Pointer32>;
-template class SegmentContext<true, Utils::Arch::Pointer64>;
-template class SegmentContext<false, Utils::Arch::Pointer32>;
-template class SegmentContext<false, Utils::Arch::Pointer64>;
+template class Macho::SegmentContext<true, Utils::Arch::Pointer32>;
+template class Macho::SegmentContext<true, Utils::Arch::Pointer64>;
+template class Macho::SegmentContext<false, Utils::Arch::Pointer32>;
+template class Macho::SegmentContext<false, Utils::Arch::Pointer64>;
 
 template <bool ro, class P>
 Context<ro, P>::Context(
@@ -290,7 +290,9 @@ void Context<ro, P>::enumerateSections(EnumerationCallback pred,
 
 template <bool ro, class P>
 void Context<ro, P>::enumerateSections(EnumerationCallback callback) {
-  enumerateSections([](...) { return true; }, callback);
+    enumerateSections([](SegmentT &, typename SegmentT::SectionT *) {
+        return true;
+    }, callback);
 }
 
 template <bool ro, class P>
@@ -313,7 +315,7 @@ Context<ro, P>::openFiles(
   return files;
 }
 
-template class Context<true, Utils::Arch::Pointer32>;
-template class Context<true, Utils::Arch::Pointer64>;
-template class Context<false, Utils::Arch::Pointer32>;
-template class Context<false, Utils::Arch::Pointer64>;
+template class Macho::Context<true, Utils::Arch::Pointer32>;
+template class Macho::Context<true, Utils::Arch::Pointer64>;
+template class Macho::Context<false, Utils::Arch::Pointer32>;
+template class Macho::Context<false, Utils::Arch::Pointer64>;

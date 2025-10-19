@@ -37,7 +37,7 @@ template <class A> void Fixer<A>::fix() {
             return sect->flags & S_ATTR_SOME_INSTRUCTIONS;
           },
           [this](auto seg, auto sect) {
-            accelerator.codeRegions.insert(Provider::Accelerator<P>::CodeRegion(
+            accelerator.codeRegions.insert(typename Provider::Accelerator<P>::CodeRegion(
                 sect->addr, sect->addr + sect->size));
             return true;
           });
@@ -272,7 +272,7 @@ template <class A> bool Fixer<A>::isInCodeRegions(PtrT addr) {
   }
 
   auto upper = accelerator.codeRegions.upper_bound(
-      Provider::Accelerator<P>::CodeRegion(addr, addr));
+      typename Provider::Accelerator<P>::CodeRegion(addr, addr));
   if (upper == accelerator.codeRegions.begin()) {
     return false;
   }
@@ -281,9 +281,9 @@ template <class A> bool Fixer<A>::isInCodeRegions(PtrT addr) {
   return addr >= potentialRange.start && addr < potentialRange.end;
 }
 
-template class Fixer<Utils::Arch::arm>;
-template class Fixer<Utils::Arch::arm64>;
-template class Fixer<Utils::Arch::arm64_32>;
+template class Stubs::Fixer<Utils::Arch::arm>;
+template class Stubs::Fixer<Utils::Arch::arm64>;
+template class Stubs::Fixer<Utils::Arch::arm64_32>;
 
 template <class A> void Converter::fixStubs(Utils::ExtractionContext<A> &eCtx) {
   if constexpr (std::is_same_v<A, Utils::Arch::arm> ||
